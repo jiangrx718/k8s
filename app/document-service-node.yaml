@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-service
+  namespace: app
+spec:
+  selector:
+    app: document
+  ports:
+  - port: 8088
+    targetPort: 8088
+    nodePort: 30088  # ← 这就是您的访问端口
+  type: NodePort     # ← 已经配置为 NodePort

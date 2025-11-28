@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: document-config
+  namespace: app
+data:
+  APPLICATION_ENV: "production"
+  SPRING_PROFILES_ACTIVE: "prod"
+  LOG_LEVEL: "INFO"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret-app
+  namespace: app
+type: Opaque
+data:
+  password: MTIzNDU2  # 123456
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: document-service
+  namespace: app
+  labels:
+    app: document
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: document
+  template:
+    metadata:
+      labels:
+        app: document
+    spec:
+      containers:
+      - name: document
+        image: document:1.0.0-amd64
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8088  # 修正为 8088，与应用实际端口一致
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          valueFrom:
+            configMapKeyRef:
+              name: document-config
+              key: SPRING_PROFILES_ACTIVE
+        # 数据库连接配置
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql-service.db.svc.cluster.local:3306/slb_studio?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret-app
+              key: password
+        # Redis 连接配置
+        - name: SPRING_REDIS_HOST
+          value: "redis-service.db.svc.cluster.local"
+        - name: SPRING_REDIS_PORT
+          value: "6379"
+        - name: SPRING_REDIS_PASSWORD
+          value: "redis123"
+        # RabbitMQ 连接配置
+        - name: SPRING_RABBITMQ_HOST
+          value: "rabbitmq-service.db.svc.cluster.local"
+        - name: SPRING_RABBITMQ_PORT
+          value: "5672"
+        - name: SPRING_RABBITMQ_USERNAME
+          value: "guest"
+        - name: SPRING_RABBITMQ_PASSWORD
+          value: "guest"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # livenessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: 8088  # 修正为 8088
+        #   initialDelaySeconds: 90  # 延长启动时间
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        # readinessProbe:
+        #   httpGet:
+        #     path: /actuator/health
+        #     port: 8088  # 修正为 8088
+        #   initialDelaySeconds: 60  # 延长启动时间
+        #   periodSeconds: 5
+        #   timeoutSeconds: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: document-service
+  namespace: app
+spec:
+  selector:
+    app: document
+  ports:
+  - port: 8088        # Service 端口
+    targetPort: 8088  # 目标端口（容器端口），修正为 8088
+    nodePort: 30088   # NodePort，可以保持 30088 或改为其他端口
+  type: NodePort
