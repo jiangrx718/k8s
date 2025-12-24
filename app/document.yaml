@@ -8,15 +8,6 @@ data:
   SPRING_PROFILES_ACTIVE: "prod"
   LOG_LEVEL: "INFO"
 ---
-apiVersion: v1
-kind: Secret
-metadata:
-  name: mysql-secret-app
-  namespace: app
-type: Opaque
-data:
-  password: MTIzNDU2  # 123456
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
