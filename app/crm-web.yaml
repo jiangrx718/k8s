@@ -28,7 +28,7 @@ metadata:
   labels:
     app: crm-web
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: crm-web
@@ -133,13 +133,6 @@ spec:
             name: crm-service
             port:
               number: 8080
-      - path: /api/document(/|$)(.*)
-        pathType: Prefix
-        backend:
-          service:
-            name: document-service
-            port:
-              number: 8088
       - path: /(.*)
         pathType: Prefix
         backend:
