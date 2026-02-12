@@ -4,3 +4,26 @@ resources:
   - mysql-service.yaml
   - redis-service.yaml
   - rabbitmq-service.yaml
+
+patches:
+  - path: mysql-service-nodeport.yaml
+    target:
+      group: ""
+      version: v1
+      kind: Service
+      name: mysql-service
+      namespace: db
+  - path: redis-service-nodeport.yaml
+    target:
+      group: ""
+      version: v1
+      kind: Service
+      name: redis-service
+      namespace: db
+  - path: rabbitmq-service-nodeport.yaml
+    target:
+      group: ""
+      version: v1
+      kind: Service
+      name: rabbitmq-service
+      namespace: db
